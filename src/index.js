@@ -34,6 +34,7 @@ class ServerlessPluginOfflineDynamodbStream {
         region,
         batchSize,
         pollForever = false,
+        credentials = {},
       } = {},
       serverless: { service: { provider: { environment } = {} } = {} } = {},
     } = this;
@@ -60,8 +61,8 @@ class ServerlessPluginOfflineDynamodbStream {
 
     streams.forEach(({ table, functions }) => {
       const dynamo = endpoint
-        ? new AWS.DynamoDB({ region, endpoint })
-        : new AWS.DynamoDB({ region });
+        ? new AWS.DynamoDB({ region, endpoint, ...credentials })
+        : new AWS.DynamoDB({ region, ...credentials });
       dynamo.describeTable({ TableName: table }, (err, tableDescription) => {
         if (err) {
           throw err;
@@ -77,8 +78,9 @@ class ServerlessPluginOfflineDynamodbStream {
             ? new AWS.DynamoDBStreams({
                 region,
                 endpoint,
+                ...credentials,
               })
-            : new AWS.DynamoDBStreams({ region });
+            : new AWS.DynamoDBStreams({ region, ...credentials });
 
           const readable = new DynamoDBStreamReadable(
             ddbStream,
